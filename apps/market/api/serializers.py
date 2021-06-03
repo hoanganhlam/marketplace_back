@@ -84,26 +84,22 @@ class ActivitySerializer(serializers.ModelSerializer):
         extra_kwargs = {}
 
     def to_representation(self, instance):
+        self.fields['fr'] = WalletTokenSerializer()
+        self.fields['to'] = WalletTokenSerializer()
+        self.fields['asset'] = AssetSerializer()
         return super(ActivitySerializer, self).to_representation(instance)
 
 
-class PriceHistorySerializer(serializers.ModelSerializer):
+class AuctionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Activity
+        model = models.Auction
         fields = '__all__'
         extra_fields = []
         extra_kwargs = {}
 
     def to_representation(self, instance):
-        return super(PriceHistorySerializer, self).to_representation(instance)
-
-
-class BidSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Bid
-        fields = '__all__'
-        extra_fields = []
-        extra_kwargs = {}
-
-    def to_representation(self, instance):
-        return super(BidSerializer, self).to_representation(instance)
+        self.fields['coin'] = CoinSerializer()
+        self.fields['fr'] = WalletTokenSerializer()
+        self.fields['to'] = WalletTokenSerializer()
+        self.fields['asset'] = AssetSerializer()
+        return super(AuctionSerializer, self).to_representation(instance)

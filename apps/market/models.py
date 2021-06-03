@@ -19,6 +19,7 @@ class WalletToken(BaseModel):
 class Coin(BaseModel, Taxonomy):
     code = models.CharField(max_length=120)
     media = models.ForeignKey(Media, related_name="coins", null=True, blank=True, on_delete=models.SET_NULL)
+    primary = models.BooleanField(default=False)
 
 
 class Chain(BaseModel, Taxonomy):
@@ -66,7 +67,7 @@ class Favorite(BaseModel):
 class Activity(BaseModel):
     fr = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="fr_activities")
     asset = models.ForeignKey(Asset, related_name="fr_activities", on_delete=models.CASCADE)
-    to = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="to_activities")
+    to = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="to_activities", blank=True, null=True)
     EVENT_CHOICE = (
         ("AUCTION_CREATED", _("AUCTION_CREATED")),
         ("OFFER_ENTERED", _("OFFER_ENTERED")),
@@ -74,18 +75,23 @@ class Activity(BaseModel):
         ("AUCTION_SUCCESSFUL", _("AUCTION_SUCCESSFUL")),
     )
     event = models.CharField(choices=EVENT_CHOICE, default="AUCTION_SUCCESSFUL", max_length=50)
-    unit_price = models.BooleanField(default=0)
+    unit_price = models.FloatField(default=0)
     quantity = models.IntegerField(default=1)
 
 
-class PriceHistory(BaseModel):
-    asset = models.ForeignKey(Asset, related_name="price_histories", on_delete=models.CASCADE)
-    price = models.FloatField(default=0)
-
-
-class Bid(BaseModel):
-    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name="bids")
-    owner = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="bids")
+class Auction(BaseModel):
+    bc_item_id = models.CharField(null=True, blank=True, max_length=128)
+    is_private = models.BooleanField(default=False)
+    is_listing = models.BooleanField(default=False)
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name="auctions")
+    invite = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="invite_auctions", null=True, blank=True)
+    fr = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="fr_auctions")
+    to = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="to_auctions", blank=True, null=True)
     asset = models.ForeignKey(Asset, related_name="bids", on_delete=models.CASCADE)
-    amount = models.FloatField(default=0)
+    unit_price = models.FloatField(default=0)
+    quantity = models.IntegerField(default=1)
+    bounties = models.FloatField(default=1)
     expired = models.DateTimeField()
+    options = JSONField(null=True, blank=True)
+    is_complete = models.BooleanField(default=False)
+
