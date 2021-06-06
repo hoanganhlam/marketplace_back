@@ -28,6 +28,7 @@ class Chain(BaseModel, Taxonomy):
 
 
 class Collection(Taxonomy, BaseModel):
+    token = models.CharField(max_length=120, null=True, blank=True)
     description = models.TextField(max_length=1000, null=True, blank=True)
     media = models.ForeignKey(Media, related_name="collections", null=True, blank=True, on_delete=models.SET_NULL)
     owner = models.ForeignKey(WalletToken, related_name="collections", on_delete=models.CASCADE)
@@ -80,10 +81,11 @@ class Activity(BaseModel):
 
 
 class Auction(BaseModel):
-    bc_item_id = models.CharField(null=True, blank=True, max_length=128)
+    bc_listing_id = models.CharField(null=True, blank=True, max_length=128)
+    bc_offer_id = models.CharField(null=True, blank=True, max_length=128)
     is_private = models.BooleanField(default=False)
     is_listing = models.BooleanField(default=False)
-    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name="auctions")
+    coin = models.ForeignKey(Coin, on_delete=models.CASCADE, related_name="auctions", null=True, blank=True)
     invite = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="invite_auctions", null=True, blank=True)
     fr = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="fr_auctions")
     to = models.ForeignKey(WalletToken, on_delete=models.CASCADE, related_name="to_auctions", blank=True, null=True)
@@ -94,4 +96,4 @@ class Auction(BaseModel):
     expired = models.DateTimeField()
     options = JSONField(null=True, blank=True)
     is_complete = models.BooleanField(default=False)
-
+    for_listing = models.ForeignKey("self", related_name="offers", on_delete=models.CASCADE, null=True, blank=True)

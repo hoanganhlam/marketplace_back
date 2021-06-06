@@ -102,4 +102,5 @@ class AuctionSerializer(serializers.ModelSerializer):
         self.fields['fr'] = WalletTokenSerializer()
         self.fields['to'] = WalletTokenSerializer()
         self.fields['asset'] = AssetSerializer()
+        self.fields['for_listing'] = AuctionSerializer()
         return super(AuctionSerializer, self).to_representation(instance)

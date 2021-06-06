@@ -15,18 +15,33 @@ class WalletTokenViewSet(viewsets.ModelViewSet):
     models = models.WalletToken
     queryset = models.objects.order_by('-id')
     serializer_class = serializers.WalletTokenSerializer
-    permission_classes = permissions.AllowAny,
+    permission_classes = permissions.IsAuthenticatedOrReadOnly,
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['full_name']
     lookup_field = 'address'
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CoinViewSet(viewsets.ModelViewSet):
     models = models.Coin
     queryset = models.objects.order_by('-id')
     serializer_class = serializers.CoinSerializer
-    permission_classes = permissions.AllowAny,
+    permission_classes = permissions.IsAuthenticatedOrReadOnly,
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title']
@@ -45,6 +60,21 @@ class CoinViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ChainViewSet(viewsets.ModelViewSet):
     models = models.Chain
@@ -54,6 +84,21 @@ class ChainViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter]
     lookup_field = 'pk'
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AssetViewSet(viewsets.ModelViewSet):
@@ -70,7 +115,7 @@ class AssetViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         # models.Asset.objects.filter(-)
-        q = Q()
+        q = Q(db_status=1)
         # statuses
         if request.GET.get("statuses"):
             q = q & Q(status__in=request.GET.get("statuses").split(","))
@@ -114,6 +159,21 @@ class AssetViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     models = models.Favorite
@@ -123,6 +183,21 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter]
     lookup_field = 'pk'
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CollectionViewSet(viewsets.ModelViewSet):
@@ -136,7 +211,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
     def list(self, request, *args, **kwargs):
-        q = Q()
+        q = Q(db_status=1)
         if request.GET.get("primary") and request.GET.get("primary") == "true":
             q = q & Q(primary=True)
         else:
@@ -150,6 +225,18 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class AuctionViewSet(viewsets.ModelViewSet):
     models = models.Auction
@@ -157,7 +244,8 @@ class AuctionViewSet(viewsets.ModelViewSet):
         .select_related("coin") \
         .select_related("fr") \
         .select_related("to") \
-        .select_related("asset")
+        .select_related("asset") \
+        .select_related("for_listing")
     serializer_class = serializers.AuctionSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -165,7 +253,7 @@ class AuctionViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        q = Q()
+        q = Q(db_status=1)
         # is_listing
         q = q & Q(is_listing=request.GET.get("is_listing") == "true")
         # from
@@ -180,6 +268,7 @@ class AuctionViewSet(viewsets.ModelViewSet):
                 .select_related("fr")
                 .select_related("to")
                 .select_related("asset")
+                .select_related("for_listing")
                 .filter(q)
                 .distinct()
         )
@@ -190,6 +279,21 @@ class AuctionViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ActivityViewSet(viewsets.ModelViewSet):
@@ -205,7 +309,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        q = Q()
+        q = Q(db_status=1)
         # events
         if request.GET.get("events"):
             q = q & Q(event__in=request.GET.get("events").split(","))
@@ -236,6 +340,21 @@ class ActivityViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.db_status = -1
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @api_view(['GET'])
 def featured(request):
@@ -249,8 +368,8 @@ def price_history(request):
     now = timezone.now()
     rg = request.GET.get("range", "7")
     start = now - timedelta(days=int(rg))
-    queryset = models.Auction.objects\
-        .only("updated", "unit_price")\
+    queryset = models.Auction.objects \
+        .only("updated", "unit_price") \
         .filter(asset__id=asset_address, updated__range=[str(start), str(now)])
     out = list(map(lambda x: {
         "price": x.unit_price,
@@ -262,7 +381,11 @@ def price_history(request):
 @api_view(['GET'])
 def good_listing(request):
     asset_address = request.GET.get("asset")
-    q = Q(is_listing=True, asset__id=asset_address)
+    asset = models.Asset.objects.get(pk=asset_address)
+    q = Q(is_listing=True, asset__id=asset_address, db_status=1, quantity__gt=0)
     q = q & (Q(expired__gt=timezone.now()) | Q(expired__isnull=True))
     listing = models.Auction.objects.filter(q).order_by("unit_price").first()
+    if listing and asset.price != listing.unit_price:
+        asset.price = listing.unit_price
+        asset.save()
     return Response(serializers.AuctionSerializer(listing).data)

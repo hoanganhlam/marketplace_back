@@ -1,6 +1,6 @@
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import Auction, Activity
+from apps.market.models import Auction, Asset, WalletToken, Collection, Activity
 
 
 @receiver(post_save, sender=Auction)
@@ -19,14 +19,3 @@ def on_post_save(sender, instance, created, *args, **kwargs):
             quantity=instance.quantity,
             unit_price=instance.unit_price,
         )
-    else:
-        if instance.is_complete:
-            for e in ["AUCTION_SUCCESSFUL", "ASSET_TRANSFER"]:
-                Activity.objects.create(
-                    event=e,
-                    fr=instance.fr,
-                    to=instance.to,
-                    asset=instance.asset,
-                    quantity=instance.quantity,
-                    unit_price=instance.unit_price
-                )
