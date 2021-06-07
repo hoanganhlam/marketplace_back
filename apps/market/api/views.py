@@ -21,6 +21,12 @@ class WalletTokenViewSet(viewsets.ModelViewSet):
     search_fields = ['full_name']
     lookup_field = 'address'
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print(instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)
         instance = self.get_object()
@@ -389,3 +395,9 @@ def good_listing(request):
         asset.price = listing.unit_price
         asset.save()
     return Response(serializers.AuctionSerializer(listing).data)
+
+
+@api_view(['GET'])
+def sync_wallet(request, wallet_address):
+    item, is_created = models.WalletToken.objects.get_or_create(address=wallet_address)
+    return Response(serializers.WalletTokenSerializer(item).data)

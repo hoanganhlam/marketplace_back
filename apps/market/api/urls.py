@@ -16,4 +16,5 @@ urlpatterns = [
     url(r'^featured/$', views.featured),
     url(r'^price-history/$', views.price_history),
     url(r'^good-listing/$', views.good_listing),
+    url(r'^sync-wallet/(?P<wallet_address>[-\w]+)/$', views.sync_wallet),
 ]
