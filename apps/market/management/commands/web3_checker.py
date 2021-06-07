@@ -18,6 +18,7 @@ block_filter = w3.eth.filter({'fromBlock': 'latest', 'address': contractAddress}
 
 
 def handle_event(event):
+    print(event)
     receipt = w3.eth.waitForTransactionReceipt(event['transactionHash'])
     result = contract.events.List().processReceipt(receipt)
     flag = "listing"
@@ -39,6 +40,8 @@ def handle_event(event):
     fr, created = WalletToken.objects.get_or_create(address=raw_data.get("from"))
     now = timezone.now()
     expired = now + timedelta(days=7)
+    print(raw_data)
+    print(flag)
     if flag == "listing":
         checker = Auction.objects.filter(bc_listing_id=raw_data.get("itemId")).first()
         if checker is None:
