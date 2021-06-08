@@ -61,19 +61,9 @@ class CollectionSerializer(serializers.ModelSerializer):
         extra_kwargs = {}
 
     def to_representation(self, instance):
-        self.fields['media'] = MediaSerializer(many=True)
+        self.fields['media'] = MediaSerializer()
+        self.fields['owner'] = WalletTokenSerializer()
         return super(CollectionSerializer, self).to_representation(instance)
-
-
-class FavoriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Favorite
-        fields = '__all__'
-        extra_fields = []
-        extra_kwargs = {}
-
-    def to_representation(self, instance):
-        return super(FavoriteSerializer, self).to_representation(instance)
 
 
 class ActivitySerializer(serializers.ModelSerializer):

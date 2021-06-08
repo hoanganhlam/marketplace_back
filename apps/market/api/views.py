@@ -181,31 +181,6 @@ class AssetViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class FavoriteViewSet(viewsets.ModelViewSet):
-    models = models.Favorite
-    queryset = models.objects.order_by('-id')
-    serializer_class = serializers.FavoriteSerializer
-    permission_classes = permissions.AllowAny,
-    pagination_class = pagination.Pagination
-    filter_backends = [OrderingFilter]
-    lookup_field = 'pk'
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', True)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.db_status = -1
-        instance.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 class CollectionViewSet(viewsets.ModelViewSet):
     models = models.Collection
     queryset = models.objects.order_by('-id')
@@ -401,3 +376,26 @@ def good_listing(request):
 def sync_wallet(request, wallet_address):
     item, is_created = models.WalletToken.objects.get_or_create(address=wallet_address)
     return Response(serializers.WalletTokenSerializer(item).data)
+
+
+@api_view(['GET', 'POST'])
+def save_asset(request, pk):
+    asset = models.Asset.objects.get(pk=pk)
+    owner = models.WalletToken.objects.get(address=request.GET.get("owner"))
+    if request.method == "GET":
+        dataset = asset.hearts.all()
+        return Response({
+            "is_saved": owner in dataset,
+            "total": len(dataset)
+        })
+    else:
+        if owner in asset.hearts.all():
+            asset.hearts.remove(owner)
+            flag = False
+        else:
+            asset.hearts.add(owner)
+            flag = True
+        return Response({
+            "is_saved": flag,
+            "total": len(asset.hearts.all())
+        })

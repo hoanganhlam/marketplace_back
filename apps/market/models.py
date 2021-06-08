@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from base.interface import BaseModel, Taxonomy
-from apps.media.models import Media
+from apps.media.models import Media, path_and_rename, validate_file_size
 from django.db.models import JSONField
 from django.utils.translation import ugettext_lazy as _
 
@@ -58,11 +58,7 @@ class Asset(Taxonomy, BaseModel):
     hearts = models.ManyToManyField(WalletToken, related_name="hearted_assets", blank=True)
     media = models.ForeignKey(Media, related_name="assets", null=True, blank=True, on_delete=models.SET_NULL)
     meta = JSONField(null=True, blank=True)
-
-
-class Favorite(BaseModel):
-    owner = models.ForeignKey(WalletToken, related_name="favorites", on_delete=models.CASCADE)
-    asset = models.ForeignKey(Asset, related_name="favorites", on_delete=models.CASCADE)
+    file = models.FileField(null=True, blank=True, upload_to=path_and_rename, max_length=500, validators=[validate_file_size])
 
 
 class Activity(BaseModel):
