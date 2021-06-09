@@ -11,7 +11,7 @@ class MediaViewSet(viewsets.ModelViewSet):
     models = models.Media
     queryset = models.objects.order_by('-id')
     serializer_class = serializers.MediaSerializer
-    permission_classes = permissions.IsAuthenticatedOrReadOnly,
+    permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title', 'description']
@@ -49,7 +49,7 @@ class MediaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        return serializer.save(user=self.request.user)
+        return serializer.save()
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

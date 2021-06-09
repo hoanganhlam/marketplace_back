@@ -62,6 +62,8 @@ class CollectionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         self.fields['media'] = MediaSerializer()
+        self.fields['logo'] = MediaSerializer()
+        self.fields['banner'] = MediaSerializer()
         self.fields['owner'] = WalletTokenSerializer()
         return super(CollectionSerializer, self).to_representation(instance)
 

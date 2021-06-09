@@ -169,6 +169,14 @@ class AssetViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop('partial', True)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -197,6 +205,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
             q = q & Q(primary=True)
         else:
             q = q & ~Q(primary=True)
+        if request.GET.get("related"):
+            q = q & Q(related__id__in=request.GET.get("related").split(","))
         queryset = self.filter_queryset(models.Collection.objects.filter(q).order_by('-id').distinct())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -210,6 +220,14 @@ class CollectionViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop('partial', True)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
@@ -399,3 +417,13 @@ def save_asset(request, pk):
             "is_saved": flag,
             "total": len(asset.hearts.all())
         })
+
+
+@api_view(['GET'])
+def search(request):
+    wts = models.WalletToken.objects.filter(full_name__contains=request.GET.get("search"))[:5]
+    cls = models.Collection.objects.filter(title__contains=request.GET.get("search"))[:5]
+    return Response({
+        "wallets": serializers.WalletTokenSerializer(wts, many=True).data,
+        "collections": serializers.CollectionSerializer(cls, many=True).data
+    })

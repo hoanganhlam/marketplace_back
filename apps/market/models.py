@@ -31,6 +31,8 @@ class Collection(Taxonomy, BaseModel):
     token = models.CharField(max_length=120, null=True, blank=True)
     description = models.TextField(max_length=1000, null=True, blank=True)
     media = models.ForeignKey(Media, related_name="collections", null=True, blank=True, on_delete=models.SET_NULL)
+    logo = models.ForeignKey(Media, related_name="logo_collections", null=True, blank=True, on_delete=models.SET_NULL)
+    banner = models.ForeignKey(Media, related_name="banner_collections", null=True, blank=True, on_delete=models.SET_NULL)
     owner = models.ForeignKey(WalletToken, related_name="collections", on_delete=models.CASCADE)
     primary = models.BooleanField(default=False)
     meta = JSONField(null=True, blank=True)
